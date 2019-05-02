@@ -3,7 +3,18 @@ const express = require("express");
 const Document = require("../models/Document");
 const router = express.Router();
 
-router.get("/documents/all", (req, res, next) => {
+// Middleware
+const checkForData = (req, res, next) => {
+  const { data } = req.body;
+  if (data) {
+    next();
+  } else {
+    res.status(500).send({ error: "No Data!" });
+  }
+};
+
+// Controller
+const getAllDocuments = (req, res, next) => {
   req.app.locals.db
     .collection("documents")
     .find({})
@@ -17,7 +28,10 @@ router.get("/documents/all", (req, res, next) => {
         res.status(200).send(result);
       }
     });
-});
+};
+
+// Routes
+router.get("/documents/all", getAllDocuments);
 
 router.get("/documents/:id", (req, res, next) => {
   req.app.locals.db.collection("documents").findOne(
@@ -40,11 +54,8 @@ router.get("/documents/:id", (req, res, next) => {
 });
 
 router.post("/documents/new", (req, res, next) => {
-  const newDocument = new Document(
-    req.body.title,
-    req.body.username,
-    req.body.body
-  );
+  const { title, username, body } = req.body;
+  const newDocument = new Document(title, username, body);
   req.app.locals.db.collection("documents").insertOne(
     {
       newDocument
